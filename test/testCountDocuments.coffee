@@ -1,17 +1,4 @@
-###
-1. Create a module to hold one or more stored procedures. You simply need to `exports` your function(s).
-2. Create your mock with `mock = new DocumentDBMock('path/to/stored/procedure')`
-3. Set `mock.nextResources`, `mock.nextError`, `mock.nextOptions`, and/or `mock.nextCollectionOperationQueued` to control
-   the response that your stored procedure will see to the next collection operation. Note, nextCollectionOperationQueued
-   is the Boolean that is immediately returned from collection operation calls. Setting this to `false` allows you to test
-   situations where your stored procedure is defensively timed out by DocumentDB.
-4. Call your stored procedure like it was a function from within your test with `mock.package.your-stored-procedure()`
-5. Inspect `mock.lastBody` to see the output of your stored procedure. You can also inspect `mock.lastResponseOptions`
-   'mock.lastCollectionLink`, and `mock.lastQueryFilter` to see the last values that your stored procedure sent into
-   the most recent collection operation.
-###
-
-DocumentDBMock = require('../DocumentDBMock')  # You will just `require('documentdb-mock')`
+DocumentDBMock = require('../DocumentDBMock')  # normally `require('documentdb-mock')`
 mock = new DocumentDBMock('./stored-procedures/countDocuments')
 
 exports.countTest =

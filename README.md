@@ -159,7 +159,7 @@ If you want to test the ability of a stored procedure to be restarted:
     
         test.done()
         
-Here's an example of testing a stored procedure being forceably timed out:
+Here's an example of testing a stored procedure being forceably timed out by DocumentDB and then restarted by you:
 
       testTimeout: (test) ->
         firstBatch = [
