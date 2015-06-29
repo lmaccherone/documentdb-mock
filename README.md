@@ -194,7 +194,8 @@ Here's an example of testing a stored procedure being forceably timed out by Doc
 
 ## Changelog ##
 
-* 0.1.0 - 2015-05-03 - Initial release
+* 0.1.1 - 2015-06-29 - Minor documentation tweaks
+* 0.1.0 - 2015-06-28 - Initial release
 
 
 ## Contributing to DocumentDBMock ##
