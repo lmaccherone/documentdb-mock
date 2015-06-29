@@ -1,7 +1,20 @@
+rewire = require("rewire")
+
+type = do ->  # from http://arcturo.github.com/library/coffeescript/07_the_bad_parts.html
+  classToType = {}
+  for name in "Boolean Number String Function Array Date RegExp Undefined Null".split(" ")
+    classToType["[object " + name + "]"] = name.toLowerCase()
+
+  (obj) ->
+    strType = Object::toString.call(obj)
+    classToType[strType] or "object"
+
 class DocumentDBMock
-  constructor: (@storedProcedure) ->
-    if @storedProcedure
-      @storedProcedure.__set__('getContext', @getContext)
+  constructor: (@package) ->
+    if type(@package) is 'string'
+      @package = rewire(@package)
+    if @package?
+      @package.__set__('getContext', @getContext)
     @lastBody = null
     @lastOptions = null
     @lastEntityLink = null

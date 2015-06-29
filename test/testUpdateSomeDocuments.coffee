@@ -1,7 +1,5 @@
-rewire = require("rewire")
-updateSomeDocuments = rewire('../stored-procedures/updateSomeDocuments')
 DocumentDBMock = require('../DocumentDBMock')
-mock = new DocumentDBMock(updateSomeDocuments)
+mock = new DocumentDBMock('./stored-procedures/updateSomeDocuments')
 
 exports.updateSomeDocumentsTest =
 
@@ -12,7 +10,7 @@ exports.updateSomeDocumentsTest =
       {_self: '3', etag: '3', id: 3, value: 30}
     ]
 
-    memo = updateSomeDocuments.updateSomeDocuments({remaining: 3})
+    memo = mock.package.updateSomeDocuments({remaining: 3})
 
     test.equal(memo.remaining, 0)
     for r, i in mock.rows
@@ -27,7 +25,7 @@ exports.updateSomeDocumentsTest =
     ]
 
     f = () ->
-      memo = updateSomeDocuments.updateSomeDocuments({remaining: 3})
+      memo = mock.package.updateSomeDocuments({remaining: 3})
 
     test.throws(f)
 

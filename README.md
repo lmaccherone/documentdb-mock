@@ -32,6 +32,7 @@ DocumentDBMock implements many of the methods in the [DocumentDB's Collection cl
 ### Unimplemented ###
 
 * Attachment operations - should be easy to implement following the patterns for document operations
+* Right now, you pretty much have to pre-configure the mock with every response that you expect to get from DocumentDB operations. 
 
 
 ## Install ##
@@ -41,72 +42,164 @@ DocumentDBMock implements many of the methods in the [DocumentDB's Collection cl
 
 ## Usage ##
 
+You can look at the code in the test and stored-procedure folders to see how to use DocumentDBMock. 
 
+Basically:
 
+1. Create a module to hold one or more stored procedures. You simply need to `exports` your function(s).
+2. Create your mock with `mock = new DocumentDBMock('path/to/stored/procedure')`
+3. Set `mock.nextResources`, `mock.nextError`, `mock.nextOptions`, and/or `mock.nextCollectionOperationQueued` to control
+   the response that your stored procedure will see to the next collection operation. Note, nextCollectionOperationQueued
+   is the Boolean that is immediately returned from collection operation calls. Setting this to `false` allows you to test
+   situations where your stored procedure is defensively timed out by DocumentDB.
+4. Call your stored procedure like it was a function from within your test with `mock.package.your-stored-procedure()`
+5. Inspect `mock.lastBody` to see the output of your stored procedure. You can also inspect `mock.lastResponseOptions`
+   'mock.lastCollectionLink`, and `mock.lastQueryFilter` to see the last values that your stored procedure sent into
+   the most recent collection operation.
 
+As an example, here is a stored procedure that will count all of the documents in a collection:
+
+    count = (memo) ->
+    
+        collection = getContext().getCollection()
+    
+        unless memo?
+        memo = {}
+        unless memo.count?
+        memo.count = 0
+        unless memo.continuation?
+        memo.continuation = null
+        unless memo.example?
+        memo.example = null
+    
+        stillQueuingOperations = true
+    
+        query = () ->
+    
+        if stillQueuingOperations
+            responseOptions =
+            continuation: memo.continuation
+            pageSize: 1000
+    
+            if memo.filterQuery?
+            stillQueuingOperations = collection.queryDocuments(collection.getSelfLink(), memo.filterQuery, responseOptions, onReadDocuments)
+            else
+            stillQueuingOperations = collection.readDocuments(collection.getSelfLink(), responseOptions, onReadDocuments)
+    
+        setBody()
+    
+        onReadDocuments = (err, resources, options) ->
+        if err
+            throw err
+    
+        count = resources.length
+        memo.count += count
+        memo.example = resources[0]
+        if options.continuation?
+            memo.continuation = options.continuation
+            query()
+        else
+            memo.continuation = null
+            setBody()
+    
+        setBody = () ->
+        getContext().getResponse().setBody(memo)
+    
+        query()
+        return memo
+    
+    exports.count = count
+
+Here is a simple nodeunit test of the above stored procedure:
+
+    DocumentDBMock = require('documentdb-mock')
+    mock = new DocumentDBMock('./stored-procedures/countDocuments')
+    
+    exports.countTest =
+    
+      basicTest: (test) ->
+        mock.nextResources = [
+          {id: 1, value: 10}
+          {id: 2, value: 20}
+          {id: 3, value: 30}
+        ]
+    
+        mock.package.count()
+    
+        test.equal(mock.lastBody.count, 3)
+        test.ok(!mock.lastBody.continuation?)
+    
+        test.done()
+        
+If you want to test the ability of a stored procedure to be restarted:
+        
+      testContinuation: (test) ->
+        firstBatch = [
+          {id: 1, value: 10}
+          {id: 2, value: 20}
+        ]
+        secondBatch = [
+          {id: 3, value: 30}
+          {id: 4, value: 40}
+        ]
+        mock.resourcesList = [firstBatch, secondBatch]
+    
+        firstOptions = {continuation: 'ABC123'}
+        secondOptions = {}
+        mock.optionsList = [firstOptions, secondOptions]
+    
+        mock.package.count()
+    
+        test.equal(mock.lastBody.count, 4)
+        test.ok(!mock.lastBody.continuation?)
+    
+        # Note, lastResponseOptions is NOT the options returned from a collection operation. 
+        # It is the last one you sent in.
+        test.equal(mock.lastOptions.continuation, 'ABC123')
+    
+        test.done()
+        
+Here's an example of testing a stored procedure being forceably timed out:
+
+      testTimeout: (test) ->
+        firstBatch = [
+          {id: 1, value: 10}
+          {id: 2, value: 20}
+        ]
+        secondBatch = [
+          {id: 3, value: 30}
+          {id: 4, value: 40}
+        ]
+        mock.resourcesList = [firstBatch, secondBatch]
+    
+        firstOptions = {continuation: 'ABC123'}
+        secondOptions = {}
+        mock.optionsList = [firstOptions, secondOptions]
+    
+        mock.collectionOperationQueuedList = [true, false, true]
+    
+        mock.package.count()
+    
+        memo = mock.lastBody
+    
+        test.equal(memo.count, 2)
+        test.equal(memo.continuation, 'ABC123')
+    
+        mock.package.count(memo)
+    
+        test.equal(memo.count, 4)
+    
+        test.done()
 
 
 ## Changelog ##
 
-* 0.2.0 - 2015-06-27 - Added mock testing using DocumentDBMock
-* 0.1.2 - 2015-05-11 - Changed entry point to work via npm
-* 0.1.1 - 2015-05-04 - Fixed `cake publish`
 * 0.1.0 - 2015-05-03 - Initial release
 
 
-## Contributing to documentDBUtils ##
+## Contributing to DocumentDBMock ##
 
-### Triggers, UDFs, and Documents ###
-
-As of 2015-05-03, documentDBUtils only supports stored procedures. I personally don't use triggers or UDFs... yet, but we should probably add that. It should be easier because I don't think we'll have the same throttling and resource limit issues with just creating, deleted, and upserting them. Perhaps even more useful (and a little more work) is to support document operations, particularly bulk updates and multi-page queries which should require retry logic.
-
-### Delete Databases or Collections ###
-
-Should be easy.
-
-### Explicitly specify an operation ###
-
-I realize that this design decision of automatically choosing an operation based upon which parameters are provided might be controversial. If we added an optional "operation" field, then we could check to confirm that they provided the right config fields for that operation.
-
-### What about promises? ###
-
-Promises make the writing of waterfall pattern async much easier. However, I find that they make the writing of complicated ascyn patterns like retries and branching based upon the results of a response much harder. So, I have chosen not to use promises in the implementation of documentDBUtils.
-
-That said, since all of the complex async code is encapsulated inside of documentDBUtils, I want to implement a promises wrapper for documentDBUtils. I would gladly accept a pull-request for this.
-
-### Documentation ###
-
-Because Microsoft uses JSDoc for its library, I've decided to use it also. that said, I don't yet have any documentation generation in place. That's pretty high on my list to do myself but it's also a good candidate for pull requests if anyone wants to help. Use this approach to document the CoffeeScript.
-
-```
-###*
-# Sets the language and redraws the UI.
-# @param {object} data Object with `language` property
-# @param {string} data.language Language code
-###
-handleLanguageSet: (data) ->
-```
-
-outputs
-
-```
-/**
- * Sets the language and redraws the UI.
- * @param {object} data Object with `language` property
- * @param {string} data.language Language code
- */
-handleLanguageSet: function(data) {}
-```
-
-### Tests ###
-
-I have a pattern for writing automated tests for my own stored procedures and I regularly exercise documentDBUtils in the course of running those stored procedures. I also have done extensive exploratory testing on DocumentDB's behavior using documentDBUtils... even finding some edge cases in DocumentDB's behavior. :-) However, you cannot run DoucmentDB locally and I don't have the patience to mock it out so there are currently no automated tests.
-
-### Command line support ###
-
-At the very least it would be nice to provide a "binary" (really just CoffeeScript that starts with #!) that does the count of a collection with optional command-line parameter for filterQuery.
-
-However, it might also be nice to create a full CLI that would allow you to specify JavaScript (or even CoffeeScript) files that get pushed to stored procedures and executed. We'd have to support all of the same parameters. Then again, this might be unused functionality.
+I'd be willing to accept pull requests implementing any unimplemented functionality listed as "Unimplemented" above. Also, I'd love to hear feedback from other people using it.
 
 
 ## MIT License ##
