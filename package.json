@@ -1,0 +1,42 @@
+{
+  "name": "documentdb-mock",
+  "version": "0.1.0",
+  "description": "Mock for testing Stored Procedures in Microsoft Azure's DocumentDB",
+  "main": "./DocumentDBMock",
+  "scripts": {
+    "test": "nodeunit"
+  },
+  "keywords": [
+    "Azure",
+    "DocumentDB",
+    "Retries",
+    "Stored-Procedures",
+    "StoredProcedures",
+    "Stored Procedures",
+    "Stored-Procedure",
+    "StoredProcedure",
+    "Stored Procedure",
+    "Trigger",
+    "Triggers",
+    "UDF",
+    "User Defined Function",
+    "User Defined Functions",
+    "User-Defined-Function",
+    "User-Defined-Functions"
+  ],
+  "author": "Larry Maccherone",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/lmaccherone/documentdb-mock.git"
+  },
+  "devDependencies": {
+    "coffee-script": "^1.9.2",
+    "nodeunit": "^0.9.1"
+  },
+  "dependencies": {
+    "documentdb": "^1.0.0",
+    "documentdb-utils": "^0.2.0",
+    "rewire": "^2.3.3"
+  }
+}
