@@ -1,3 +1,5 @@
 
 .idea/
 node_modules/
+stored-procedures/*.js
+stored-procedures/*.map

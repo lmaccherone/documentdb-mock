@@ -1,218 +1,49 @@
-# documentDBUtils #
+# DocumentDBMock #
 
 Copyright (c) 2015, Lawrence S. Maccherone, Jr.
 
-_Easy-of-use and enterprise-class robustness wrapper for Azure's DocumentDB API_
+_Mock for testing Stored Procedures in Microsoft Azure's DocumentDB_
 
-The node.js client for Microsoft Azure DocumentDB is a thin wrapper around the REST API. That's fine but it means that you need to deal with all the complications of throttling retries, the restoring and continuation of stored procedures that have reached their resource limits, etc. Also, every operation requires that you have the link to the database, collection, stored procedure, etc. You currently have to fetch the links yourself by first querying for them using the human readable IDs further complicating your already mind-boggling-hard-to-write async code.
+Microsoft Azure's DocumentDB is a great PaaS NoSQL database. My absolute favorite feature is that you can write stored procedures in JavaScript (CoffeeScript in my case) but it's missing a mature way to test your stored procedures. Luckily, JavaScript runs just fine on node.js so your stored procedures will run there with mock data.
 
-In summary, documentDBUtils takes care of all of this for you and makes it much easier to use Microsoft Azure DocumentDB from node.js.
+This package implements a thin mock for testing stored procedures.
 
 
 ## Source code ##
 
-* [Source Repository](https://github.com/lmaccherone/documentdb-utils)
+* [Source Repository](https://github.com/lmaccherone/documentdb-mock)
 
 
 ## Features ##
 
 ### Working ###
 
-* Use the human readable IDs to perform operations rather than needing to pre-fetch the database, collection, or entity links.
+DocumentDBMock implements many of the methods in the [DocumentDB's Collection class](http://dl.windowsazure.com/documentDB/jsserverdocs/Collection.html) including:
 
-* Automatically handles 429 throttling responses by delaying the specified amount of time and retrying.
-
-* Automatically deals with early termination of stored procedures for exceeding resources. Just follow a simple pattern (memoization like that used in a reduce function) for writing your stored procedures. The state will be shipped back to the calling side and the stored procedure will be called again picking back up right where it left off. **Note as of 2015-05-03, it also deletes and recreates the stored procedure that violated the resource constraint as a work-around for [the bug?/expected behavior?](http://stackoverflow.com/questions/29978925/documentdb-stored-procedure-blocked) causing any such stored procedure to be black listed. It's designed to avoid ever getting this message `{"Errors":["The script with id 'xxx' is blocked for execution because it has violated its allowed resource limit several times."]}`**
-
-* Full traceability while executing by setting debug=true.
-
-* Stats on setup time, stored procedure execution time, time lost to throttling, number of stored procedure continuations were required, etc.
+* getResponse.setBody
+* getSelfLink
+* createDocument
+* readDocument
+* replaceDocument
+* deleteDocument
+* queryDocuments
+* readDocuments
 
 ### Unimplemented ###
 
-* Triggers, UDFs, and Documents. As of 2015-05-03, documentDBUtils only supports stored procedures.
-
-* Delete Databases or Collections. We automatically create them if they are referenced, but we have not funtionality for deleting them.
-
+* Attachment operations - should be easy to implement following the patterns for document operations
 
 
 ## Install ##
 
-`npm install -save documentdb-utils`
+`npm install -save documentdb-mock`
 
 
 ## Usage ##
 
-Let's say you wrote this little stored procedure and saved it in hello.coffee.
-
-    exports.hello = () ->
-      getContext().getResponse().setBody('Hello world!')
-      
-or if you prefer JavaScript saved in hello.js.
-
-    exports.hello = function () {
-      getContext().getResponse().setBody('Hello world!');
-    }
-   
-Now let's write some CoffeeScript (or equivalent JavaScript) to send and execute this on the server:
-
-    documentDBUtils = require('documentdb-utils')
-  
-    {hello} = require('./hello')
-  
-    config =
-      databaseID: 'test-stored-procedure'
-      collectionID: 'test-stored-procedure'
-      storedProcedureID: 'hello'
-      storedProcedureJS: hello
-      memo: {}
-  
-    processResponse = (err, response) ->
-      if err?
-        throw err
-      console.log(response.memo)
-    
-    documentDBUtils(config, processResponse)
-  
-Execute with something like: `coffee tryHello.coffee`. You should see `Hello world!` as your output.
-
-Note, that we did not include any authorization information or connection strings in our config. That's because it will pull from these two environment variables:
-
-* DOCUMENT_DB_URL - The URL for the DocumentDB
-* DOCUMENT_DB_KEY - The API key
-
-Alternatively, you can provide `config.urlConnection` and `config.auth.masterKey` or any other valid `config.auth` as specified by the DocumentDB API.
-  
-Also, note that the response includes information about the execution. Add `console.log(response.stats)` to the end of your processResponse function to see timings for setup, execution, and lost to throttling as well as the number of round-trips to to stored procedure yields, etc.
-
-Additionally, the response comes back with the links (and full objects) for whatever it needed to fetch to do its job. For this example, it will have `database`, `databaseLink`, `collection`, `collectionLink`, `storedProcedure`, and `storedProcedureLink` fields added to it. You can cache these to speed up subsequent work. For instance, the code below will create the stored procedure and execute (just as we did above) but use the returning storedProcedureLink to execute it a second time, much faster:
-
-    documentDBUtils = require('documentdb-utils')
-    
-    {hello} = require('./hello')
-    
-    config =
-      databaseID: 'test-stored-procedure'
-      collectionID: 'test-stored-procedure'
-      storedProcedureID: 'hello'
-      storedProcedureJS: hello
-      memo: {}
-    
-    processResponse = (err, response) ->
-      if err?
-        throw err
-      console.log('First execution including sending stored procedure to DocumentDB')
-      console.log(response.memo)
-      console.log(response.stats)
-      
-      config2 =
-        storedProcedureLink: response.storedProcedureLink
-        memo: {}
-      documentDBUtils(config2, (err, response) ->
-        if err
-          throw err
-        console.log('\nSecond execution')
-        console.log(response.memo)
-        console.log(response.stats)
-      )
-    
-    documentDBUtils(config, processResponse)
-
-And here is its output.
-
-    First execution including sending stored procedure to DocumentDB
-    Hello world!
-    { executionRoundTrips: 1,
-      setupTime: 1184,
-      executionTime: 304,
-      timeLostToThrottling: 0,
-      totalTime: 1488 }
-    
-    Second execution
-    Hello world!
-    { executionRoundTrips: 1,
-      setupTime: 0,
-      executionTime: 404,
-      timeLostToThrottling: 0,
-      totalTime: 404 }
-    
-Notice how documentDBUtils figures out what you want to do by what you send to it. Here's a table of what operations are performed based upon what you send to it.
-
-| ...ID, ...Link or full entity | storedProcedureJS | memo | Operation          |
-| :---------------------------: | :---------------: | :--: | :----------------: |
-| Yes                           | Yes               | Yes  | Upsert and Execute |
-| Yes                           | No                | Yes  | Execute            |
-| Yes                           | Yes               | No   | Upsert             |
-| Yes                           | No                | No   | Delete             |
 
 
-## Pattern for writing stored procedures ##
 
-**The key to a general pattern for writing restartable stored procedures is to write them as if you were writing a reduce() function.**
-
-Note, if you follow this pattern, documentDBUtils automatically deals with early termination of stored procedures for exceeding resources. Just follow this simple pattern. The state will be shipped back to the calling side and the stored procedure will be called again picking back up right where it left off.
-
-Pehaps the most common use of stored procedures is to aggregate or transform data. It's very easy to think of these as "reduce" operations just like Array.reduce() or the reduce implementations in underscore, async.js, or just about any other library with aggregation functionality. It stretches the "reduce" metaphore a bit, but the pattern itself is perfectly usefull even for stored procedures that write data.
-
-So:
-
-1. Only accept one parameter -- a JavaScript Object. Let's name it `memo`.
-1. Support an empty or missing `memo` on the initial call.
-1. Store any variable that represents the current running state of the stored procedure into the `memo` object.
-1. Store the `continuation` field returned by readDocuments and queryDocuments into `memo.continuation`.
-1. Optionally store any internal visibility (debugging, timings, etc.) into the `memo` object.
-1. Call `getContext().getResponse().setBody(memo)` regulary, particularly right after you kick off a collection operation (readDocuments, createDocument, etc.).
-1. If `false` is returned from the last prior call to an async operation, don't issue any more async calls. Rather, wrap up the stored procedure quickly. Note, it's unclear to me that the call that returned false is guaranteed to finish, so I've resorted to writing my stored procedures so they will restart correctly whether they fail or not. That said, I have not experienced a case where the last call failed to complete.
-1. Optionally, wrap up early when the stored procedure exceeds other constraints. My super-duper count example below implements both maxRowCount and maxExecutionTime constraints.
-
-Here is an example of a stored procedure that counts all the documents in a collection with an option to filter based upon provided filterQuery field in the initial memo. The source for this is included in this repository.
-
-    count = (memo) ->
-    
-      collection = getContext().getCollection()
-    
-      unless memo?
-        memo = {}
-      unless memo.count?
-        memo.count = 0
-      unless memo.continuation?
-        memo.continuation = null
-    
-      stillQueuingOperations = true
-    
-      query = (responseOptions) ->
-    
-        if stillQueuingOperations
-          responseOptions =
-            continuation: memo.continuation
-            pageSize: 1000
-    
-          if memo.filterQuery?
-            stillQueuingOperations = collection.queryDocuments(collection.getSelfLink(), memo.filterQuery, responseOptions, onReadDocuments)
-          else
-            stillQueuingOperations = collection.readDocuments(collection.getSelfLink(), responseOptions, onReadDocuments)
-    
-        setBody()
-    
-      onReadDocuments = (err, resources, options) ->
-        if err
-          throw err
-    
-        count = resources.length
-        memo.count += count
-        if options.continuation?
-          memo.continuation = options.continuation
-          query()
-        else
-          memo.continuation = null
-          setBody()
-    
-      setBody = () ->
-        getContext().getResponse().setBody(memo)
-    
-      query()
-    
-    exports.count = count
 
 
 ## Changelog ##
