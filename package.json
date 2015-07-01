@@ -4,7 +4,8 @@
   "description": "Mock for testing Stored Procedures in Microsoft Azure's DocumentDB",
   "main": "./DocumentDBMock",
   "scripts": {
-    "test": "nodeunit"
+    "test": "nodeunit",
+    "prepublish": "cake compile"
   },
   "keywords": [
     "Azure",
