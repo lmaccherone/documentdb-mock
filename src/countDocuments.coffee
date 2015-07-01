@@ -1,4 +1,4 @@
-documentDBUtils = require('../documentDBUtils')
+documentDBUtils = require('documentdb-utils')
 
 filterQuery = null
 #filterQuery = "SELECT * FROM c WHERE c.Severity = 2"
@@ -6,7 +6,7 @@ filterQuery = null
 {count} = require('../stored-procedures/countDocuments')
 config =
   databaseID: 'test-stored-procedure'
-  collectionID: 'test-stored-procedure'
+  collectionID: 'testing-s3'
   storedProcedureID: 'count'
   storedProcedureJS: count
   memo: {filterQuery}

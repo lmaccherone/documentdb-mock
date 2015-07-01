@@ -1,5 +1,4 @@
-documentDBUtils = require('../documentDBUtils')
-DocumentClient = require("documentdb").DocumentClient
+documentDBUtils = require('documentdb-utils')
 
 {deleteSomeDocuments} = require('../stored-procedures/deleteSomeDocuments')
 config =
