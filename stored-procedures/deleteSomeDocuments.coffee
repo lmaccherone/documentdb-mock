@@ -23,15 +23,15 @@ deleteSomeDocuments = (memo) ->
     if resources.length isnt memo.remaining
       throw new Error("Expected memo.remaining (#{memo.remaining}) and the number of rows returned (#{resources.length}) to match. They don't.")
 
-    queued = true
-    while memo.remaining > 0 and queued
+    memo.stillQueueing = true
+    while memo.remaining > 0 and memo.stillQueueing
       oldDocument = resources[memo.remaining - 1]
       documentLink = oldDocument._self
       etag = oldDocument._etag
       options = {etag}  # Sending the etag per best practice, but not handling it if there is conflict.
       getContext().getResponse().setBody(memo)
-      queued = collection.deleteDocument(documentLink, options)
-      if queued
+      memo.stillQueueing = collection.deleteDocument(documentLink, options)
+      if memo.stillQueueing
         memo.deleted.push(oldDocument)
         memo.remaining--
 

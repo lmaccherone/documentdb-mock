@@ -5,7 +5,7 @@ exports.generateDataTest =
 
   basicTest: (test) ->
     memo = mock.package.generateData({remaining: 3})
-    test.deepEqual(memo, {remaining: 0, totalCount: 3, countForThisRun: 3})
+    test.deepEqual(memo, {remaining: 0, totalCount: 3, countForThisRun: 3, stillQueueing: true})
     test.equal(mock.rows.length, 3)
     for key in ['ProjectHierarchy', 'Priority', 'Severity', 'Points', 'State']
       test.ok(mock.lastRow.hasOwnProperty(key))

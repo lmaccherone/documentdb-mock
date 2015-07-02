@@ -35,10 +35,10 @@ updateSomeDocuments = (memo) ->
   unless memo.transactions?
     memo.transactions = []
 
-  stillQueuingOperations = true
+  memo.stillQueueing = true
 
   query = () ->
-    if stillQueuingOperations
+    if memo.stillQueueing
       responseOptions =
         pageSize: memo.remaining
       setBody()
@@ -51,9 +51,8 @@ updateSomeDocuments = (memo) ->
     if resources.length isnt memo.remaining
       throw new Error("Expected memo.remaining (#{memo.remaining}) and the number of rows returned (#{resources.length}) to match. They don't.")
 
-    # generate 5 new documents and update them
-    queued = true
-    while memo.remaining > 0 and queued
+    memo.stillQueueing = true
+    while memo.remaining > 0 and memo.stillQueueing
       oldDocument = resources[memo.remaining - 1]
       documentLink = oldDocument._self
       etag = oldDocument._etag
@@ -61,8 +60,8 @@ updateSomeDocuments = (memo) ->
       newDocument = getRandomRow()
       newDocument.id = oldDocument.id
       getContext().getResponse().setBody(memo)
-      queued = collection.replaceDocument(documentLink, newDocument, options)
-      if queued
+      memo.stillQueueing = collection.replaceDocument(documentLink, newDocument, options)
+      if memo.stillQueueing
         memo.transactions.push({oldDocument, newDocument})
         memo.remaining--
 

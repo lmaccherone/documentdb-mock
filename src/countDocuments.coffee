@@ -10,7 +10,7 @@ config =
   storedProcedureID: 'count'
   storedProcedureJS: count
   memo: {filterQuery}
-  debug: false
+  debug: true
 
 processResponse = (err, response) ->
   if err?

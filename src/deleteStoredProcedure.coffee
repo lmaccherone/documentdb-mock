@@ -1,12 +1,9 @@
 documentDBUtils = require('documentdb-utils')
 
-{generateData} = require('../stored-procedures/createVariedDocuments')
 config =
   databaseID: 'test-stored-procedure'
   collectionID: 'testing-s3'
   storedProcedureID: 'generateData'
-  storedProcedureJS: generateData
-  memo: {remaining: 10000}
   debug: true
 
 processResponse = (err, response) ->

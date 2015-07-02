@@ -1,6 +1,6 @@
 documentDBUtils = require('documentdb-utils')
 
-{generateData} = require('../stored-procedures/createVariedDocuments')
+{generateData} = require('../stored-procedures/createIdenticalDocuments')
 config =
   databaseID: 'test-stored-procedure'
   collectionID: 'testing-s3'
