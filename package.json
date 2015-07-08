@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "documentdb": "^1.0.0",
-    "documentdb-utils": "^0.2.5",
+    "documentdb-utils": "^0.3.0",
     "rewire": "^2.3.3"
   }
 }

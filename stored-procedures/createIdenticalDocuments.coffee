@@ -5,7 +5,7 @@ generateData = (memo) ->
   unless memo.totalCount?
     memo.totalCount = 0
   memo.countForThisRun = 0
-  timeout = memo.timeout or 600  # Get 408 RequestTimeout at 800. Works at 700.
+  timeout = memo.timeout or 5000  # Get 408 RequestTimeout at 800. Works at 700.
   startTime = new Date()
   memo.stillTime = true
 
@@ -21,6 +21,8 @@ generateData = (memo) ->
       memo.remaining--
       memo.countForThisRun++
       memo.totalCount++
+    else
+      return memo
     nowTime = new Date()
     memo.nowTime = nowTime
     memo.startTime = startTime
@@ -29,6 +31,8 @@ generateData = (memo) ->
       memo.continuation = null
     else
       memo.continuation = 'Value does not matter'
+      getContext().getResponse().setBody(memo)
+      return memo
 
   getContext().getResponse().setBody(memo)
   return memo
