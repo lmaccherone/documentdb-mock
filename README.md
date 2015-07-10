@@ -194,6 +194,7 @@ Here's an example of testing a stored procedure being forceably timed out by Doc
 
 ## Changelog ##
 
+* 0.1.4 - 2015-07-07 - Now correctly supports missing options parameter. Also fixed createVariedDocuments to use callback, which exposed the problem with the optional options parameter.
 * 0.1.3 - 2015-07-07 - Lots of little fixes found when using to test documentdb-lumenize
 * 0.1.2 - 2015-06-30 - Fixed src examples broken when this was split from documentdb-utils
 * 0.1.1 - 2015-06-29 - Minor documentation tweaks

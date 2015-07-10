@@ -4,8 +4,9 @@ mock = new DocumentDBMock('./stored-procedures/createVariedDocuments')
 exports.generateDataTest =
 
   basicTest: (test) ->
-    memo = mock.package.generateData({remaining: 3})
-    test.deepEqual(memo, {remaining: 0, totalCount: 3, countForThisRun: 3, stillQueueing: true})
+    mock.package.generateData({remaining: 3})
+    memo = mock.lastBody
+    test.deepEqual(memo, {remaining: 0, totalCount: 3, countForThisRun: 3, stillQueueing: true, continuation: null})
     test.equal(mock.rows.length, 3)
     for key in ['ProjectHierarchy', 'Priority', 'Severity', 'Points', 'State']
       test.ok(mock.lastRow.hasOwnProperty(key))
@@ -23,7 +24,8 @@ exports.generateDataTest =
   testTimeout: (test) ->
     mock.collectionOperationQueuedList = [true, false, false]
 
-    memo = mock.package.generateData({remaining: 3})
+    mock.package.generateData({remaining: 3})
+    memo = mock.lastBody
 
     test.equal(memo.remaining, 2)
     test.equal(memo.totalCount, 1)
@@ -31,7 +33,8 @@ exports.generateDataTest =
 
     # Continuing
     mock.collectionOperationQueuedList = [true, true, true]
-    memo = mock.package.generateData(memo)
+    mock.package.generateData(memo)
+    memo = mock.lastBody
     test.equal(memo.remaining, 0)
     test.equal(memo.totalCount, 3)
     test.equal(memo.countForThisRun, 2)

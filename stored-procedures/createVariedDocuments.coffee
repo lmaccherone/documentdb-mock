@@ -5,9 +5,6 @@ generateData = (memo) ->
   unless memo.totalCount?
     memo.totalCount = 0
   memo.countForThisRun = 0
-  timeout = memo.timeout or 500
-  startTime = new Date()
-  memo.stillTime = true
 
   possibleValues =
     ProjectHierarchy: [
@@ -33,28 +30,34 @@ generateData = (memo) ->
 
   collection = getContext().getCollection()
   collectionLink = collection.getSelfLink()
-
   memo.stillQueueing = true
-  while memo.remaining > 0 and memo.stillQueueing and memo.stillTime
-    row = {}
-    for key in keys
-      row[key] = getRandomValue(possibleValues[key])
-    getContext().getResponse().setBody(memo)
-    memo.stillQueueing = collection.createDocument(collectionLink, row)
-    if memo.stillQueueing
-      memo.remaining--
-      memo.countForThisRun++
-      memo.totalCount++
-    nowTime = new Date()
-    memo.nowTime = nowTime
-    memo.startTime = startTime
-    memo.stillTime = (nowTime - startTime) < timeout
-    if memo.stillTime
-      memo.continuation = null
-    else
-      memo.continuation = 'Value does not matter'
 
-  getContext().getResponse().setBody(memo)
-  return memo
+  createDocument = () ->
+    if memo.remaining > 0 and memo.stillQueueing
+      row = {}
+      for key in keys
+        row[key] = getRandomValue(possibleValues[key])
+      getContext().getResponse().setBody(memo)
+      memo.stillQueueing = collection.createDocument(collectionLink, row, (error, resource, options) ->
+        if error?
+          throw new Error(error)
+        else if memo.stillQueueing
+          memo.remaining--
+          memo.countForThisRun++
+          memo.totalCount++
+          createDocument()
+        else if memo.remaining > 0
+          memo.continuation = 'Value does not matter'
+          getContext().getResponse().setBody(memo)
+        else
+          memo.continuation = null
+          getContext().getResponse().setBody(memo)
+      )
+    else
+      memo.continuation = null
+      getContext().getResponse().setBody(memo)
+
+  createDocument()
+
 
 exports.generateData = generateData

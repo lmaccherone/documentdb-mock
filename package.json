@@ -1,6 +1,6 @@
 {
   "name": "documentdb-mock",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Mock for testing Stored Procedures in Microsoft Azure's DocumentDB",
   "main": "./DocumentDBMock",
   "scripts": {
@@ -36,7 +36,7 @@
     "nodeunit": "^0.9.1"
   },
   "dependencies": {
-    "documentdb": "^1.0.0",
+    "documentdb": "^1.1.0",
     "documentdb-utils": "^0.3.0",
     "rewire": "^2.3.3"
   }

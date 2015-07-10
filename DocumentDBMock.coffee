@@ -22,7 +22,7 @@ class DocumentDBMock
     @lastRow = null
     @rows = []
     @nextError = null
-    @nextResources = []
+    @nextResources = {}
     @nextOptions = {}
     @nextCollectionOperationQueued = true
     @errorList = null
@@ -48,7 +48,13 @@ class DocumentDBMock
         @lastBody = body
 
     getCollection: () =>
+      getSelfLink: () =>
+        return 'mocked-self-link'
+
       queryDocuments: (@lastEntityLink, @lastQueryFilter, @lastOptions, callback) =>
+        if typeof(@lastOptions) is 'function'
+          callback = @lastOptions
+          @lastOptions = null
         @_shiftNextCollectionOperationQueued()
         if @nextCollectionOperationQueued
           @_shiftNext()
@@ -56,16 +62,19 @@ class DocumentDBMock
         return @nextCollectionOperationQueued
 
       readDocuments: (@lastEntityLink, @lastOptions, callback) =>
+        if typeof(@lastOptions) is 'function'
+          callback = @lastOptions
+          @lastOptions = null
         @_shiftNextCollectionOperationQueued()
         if @nextCollectionOperationQueued
           @_shiftNext()
           callback(@nextError, @nextResources, @nextOptions)
         return @nextCollectionOperationQueued
 
-      getSelfLink: () =>
-        return 'mocked-self-link'
-
       createDocument: (@lastEntityLink, @lastRow, @lastOptions, callback) =>
+        if typeof(@lastOptions) is 'function'
+          callback = @lastOptions
+          @lastOptions = null
         @_shiftNextCollectionOperationQueued()
         if @nextCollectionOperationQueued
           @rows.push(@lastRow)
@@ -75,6 +84,9 @@ class DocumentDBMock
         return @nextCollectionOperationQueued
 
       readDocument: (@lastEntityLink, @lastOptions, callback) =>
+        if typeof(@lastOptions) is 'function'
+          callback = @lastOptions
+          @lastOptions = null
         @_shiftNextCollectionOperationQueued()
         if @nextCollectionOperationQueued
           @_shiftNext()
@@ -82,6 +94,9 @@ class DocumentDBMock
         return @nextCollectionOperationQueued
 
       replaceDocument: (@lastEntityLink, @lastRow, @lastOptions, callback) =>
+        if typeof(@lastOptions) is 'function'
+          callback = @lastOptions
+          @lastOptions = null
         unless @lastRow?.id?
           throw new Error("The input content is invalid because the required property, id, is missing.")
         @_shiftNextCollectionOperationQueued()
@@ -93,6 +108,9 @@ class DocumentDBMock
         return @nextCollectionOperationQueued
 
       deleteDocument: (@lastEntityLink, @lastOptions, callback) =>
+        if typeof(@lastOptions) is 'function'
+          callback = @lastOptions
+          @lastOptions = null
         @_shiftNextCollectionOperationQueued()
         if @nextCollectionOperationQueued
           @rows.push(@lastEntityLink)
