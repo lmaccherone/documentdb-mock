@@ -1,5 +1,6 @@
 fs = require('fs')
 spawnSync = require('child_process').spawnSync
+path = require('path')
 
 runSync = (command, options, next) ->
   {stderr, stdout} = runSyncRaw(command, options)
@@ -22,6 +23,9 @@ runSyncRaw = (command, options) ->
   stdout = output.stdout?.toString()
   stderr = output.stderr?.toString()
   return {stderr, stdout}
+
+endsWith = (s, suffix) ->
+  s.indexOf(suffix, s.length - suffix.length) isnt -1
 
 task('compile', 'Compile CoffeeScript source files to JavaScript', () ->
   process.chdir(__dirname)
@@ -75,5 +79,19 @@ task('publish', 'Publish to npm and add git tags', () ->
     else
       console.error('`git status --porcelain` was not clean. Not publishing.')
   )
+  runSync('cake', ['clean'])
 )
 
+task('clean', 'Deletes .js and .map files', () ->
+  console.error('this is not working correctly!!!')
+  folders = ['.', 'stored-procedures']
+  for folder in folders
+    pathToClean = path.join(__dirname, folder)
+    console.log(pathToClean)
+    fs.readdirSync(pathToClean, (err, contents) ->
+      console.log(contents)
+      for file in contents when (endsWith(file, '.js') or endsWith(file, '.map'))
+        console.log(file)
+        fs.unlinkSync(path.join(pathToClean, file))
+    )
+)

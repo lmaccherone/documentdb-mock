@@ -1,6 +1,6 @@
 {
   "name": "documentdb-mock",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "description": "Mock for testing Stored Procedures in Microsoft Azure's DocumentDB",
   "main": "./DocumentDBMock",
   "scripts": {
@@ -32,12 +32,9 @@
     "url": "http://github.com/lmaccherone/documentdb-mock.git"
   },
   "devDependencies": {
-    "coffee-script": "^1.9.2",
-    "nodeunit": "^0.9.1"
+    "coffee-script": "^1.9.2"
   },
   "dependencies": {
-    "documentdb": "^1.1.0",
-    "documentdb-utils": "^0.3.0",
     "rewire": "^2.3.3"
   }
 }

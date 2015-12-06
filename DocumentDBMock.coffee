@@ -10,6 +10,7 @@ type = do ->  # from http://arcturo.github.com/library/coffeescript/07_the_bad_p
     classToType[strType] or "object"
 
 class DocumentDBMock
+  # !TODO: Upgrade to support new `__` as alias for getContext().getCollection()
   constructor: (@package) ->
     if type(@package) is 'string'
       @package = rewire(@package)
