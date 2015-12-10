@@ -29,9 +29,14 @@ ServerSideMock implements many of the methods in the [DocumentDB's Collection cl
 * queryDocuments
 * readDocuments
 
+ClientSideMock is fairly limited at this point. It only implements the executeNext(), hasMoreResults(), and toArray() methods
+for read<entity>s() or query<entity>s() calls. 
+
 ### Unimplemented ###
 
-* Attachment operations - should be easy to implement following the patterns for document operations
+* Attachment operations (server-side) - should be easy to implement following the patterns for document operations
+* Other server-side read... or query... should be easy to implement with class self-modification
+* Other server-side methods. Can follow pattern for server-side ones
 * Right now, you pretty much have to pre-configure the mock with every response that you expect to get from DocumentDB 
   operations. It would be nice if it behaved more like the real thing and saved documents. I'd need to find an in process 
   database that supported simple SQL and that might not support all the features of DocumentDB's query language. If 

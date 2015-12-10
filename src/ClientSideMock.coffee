@@ -30,7 +30,6 @@ class Iterator
           else
             callback(err, all, headers)
       )
-
     innerF()
 
 module.exports = class ClientSideMock
@@ -47,6 +46,21 @@ module.exports = class ClientSideMock
     @resourcesList = null
     @headersList = null
 
+    entitiesWithLinkParameter = ["Attachments", "Collections", "Conflicts", "Documents", "Permissions", "StoredProcedures", "Triggers", "UserDefinedFunctions", "Users"]
+    entitiesWithNoLinkParameter = ["Databases", "Offers"]
+
+    for entity in entitiesWithLinkParameter
+      this['query' + entity] = (@lastEntityLink, @lastQueryFilter, @lastOptions) =>
+        return @_queryAnything(@lastEntityLink, @lastQueryFilter, @lastOptions)
+      this['read' + entity] = (@lastEntityLink, @lastOptions) =>
+        return @_queryAnything(undefined, undefined, @lastOptions)
+
+    for entity in entitiesWithNoLinkParameter
+      this['query' + entity] = (@lastQueryFilter, @lastOptions) =>
+        return @_queryAnything(undefined, @lastQueryFilter, @lastOptions)
+      this['read' + entity] = (@lastOptions) =>
+        return @_queryAnything(undefined, undefined, @lastOptions)
+
   _shiftNext: () ->
     if @errorList? and @errorList.length > 0
       @nextError = @errorList.shift()
@@ -57,23 +71,10 @@ module.exports = class ClientSideMock
 
   # TODO: Consider refactoring to reuse similar methods from ServerSideMock
 
-  queryDocuments: (@lastEntityLink, @lastQueryFilter, @lastOptions) =>
+  _queryAnything: (@lastEntityLink, @lastQueryFilter, @lastOptions) =>
     iterator = new Iterator(this)
     return iterator
 
-  readDocuments: (@lastEntityLink, @lastOptions) =>
-    return queryDocuments(@lastEntityLink, undefined, @lastOptions)
-
-#  readDocuments: (@lastEntityLink, @lastOptions, callback) =>
-#    if typeof(@lastOptions) is 'function'
-#      callback = @lastOptions
-#      @lastOptions = null
-#    @_shiftNextCollectionOperationQueued()
-#    if @nextCollectionOperationQueued
-#      @_shiftNext()
-#      callback(@nextError, @nextResources, @nextOptions)
-#    return @nextCollectionOperationQueued
-#
 #  createDocument: (@lastEntityLink, @lastRow, @lastOptions, callback) =>
 #    if typeof(@lastOptions) is 'function'
 #      callback = @lastOptions
