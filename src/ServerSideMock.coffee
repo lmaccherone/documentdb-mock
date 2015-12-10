@@ -9,13 +9,15 @@ type = do ->  # from http://arcturo.github.com/library/coffeescript/07_the_bad_p
     strType = Object::toString.call(obj)
     classToType[strType] or "object"
 
-class DocumentDBMock
+module.exports = class ServerSideMock
   # !TODO: Upgrade to support new `__` as alias for getContext().getCollection()
   constructor: (@package) ->
     if type(@package) is 'string'
       @package = rewire(@package)
     if @package?
       @package.__set__('getContext', @getContext)
+    else
+      throw new Error("Must provide a string or an already required package when instantiating ServerSideMock")
     @lastBody = null
     @lastOptions = null
     @lastEntityLink = null
@@ -24,11 +26,11 @@ class DocumentDBMock
     @rows = []
     @nextError = null
     @nextResources = {}
-    @nextOptions = {}
+    @nextHeaders = {}
     @nextCollectionOperationQueued = true
     @errorList = null
     @resourcesList = null
-    @optionsList = null
+    @headersList = null
     @collectionOperationQueuedList = null
 
   _shiftNext: () ->
@@ -36,8 +38,8 @@ class DocumentDBMock
       @nextError = @errorList.shift()
     if @resourcesList? and @resourcesList.length > 0
       @nextResources = @resourcesList.shift()
-    if @optionsList? and @optionsList.length > 0
-      @nextOptions = @optionsList.shift()
+    if @headersList? and @headersList.length > 0
+      @nextHeaders = @headersList.shift()
 
   _shiftNextCollectionOperationQueued: () ->
     if @collectionOperationQueuedList? and @collectionOperationQueuedList.length > 0
@@ -59,7 +61,7 @@ class DocumentDBMock
         @_shiftNextCollectionOperationQueued()
         if @nextCollectionOperationQueued
           @_shiftNext()
-          callback(@nextError, @nextResources, @nextOptions)
+          callback(@nextError, @nextResources, @nextHeaders)
         return @nextCollectionOperationQueued
 
       readDocuments: (@lastEntityLink, @lastOptions, callback) =>
@@ -69,7 +71,7 @@ class DocumentDBMock
         @_shiftNextCollectionOperationQueued()
         if @nextCollectionOperationQueued
           @_shiftNext()
-          callback(@nextError, @nextResources, @nextOptions)
+          callback(@nextError, @nextResources, @nextHeaders)
         return @nextCollectionOperationQueued
 
       createDocument: (@lastEntityLink, @lastRow, @lastOptions, callback) =>
@@ -81,7 +83,7 @@ class DocumentDBMock
           @rows.push(@lastRow)
           if callback?
             @_shiftNext()
-            callback(@nextError, @nextResources, @nextOptions)
+            callback(@nextError, @nextResources, @nextHeaders)
         return @nextCollectionOperationQueued
 
       readDocument: (@lastEntityLink, @lastOptions, callback) =>
@@ -91,7 +93,7 @@ class DocumentDBMock
         @_shiftNextCollectionOperationQueued()
         if @nextCollectionOperationQueued
           @_shiftNext()
-          callback(@nextError, @nextResources, @nextOptions)
+          callback(@nextError, @nextResources, @nextHeaders)
         return @nextCollectionOperationQueued
 
       replaceDocument: (@lastEntityLink, @lastRow, @lastOptions, callback) =>
@@ -105,7 +107,7 @@ class DocumentDBMock
           @rows.push(@lastRow)
           if callback?
             @_shiftNext()
-            callback(@nextError, @nextResources, @nextOptions)
+            callback(@nextError, @nextResources, @nextHeaders)
         return @nextCollectionOperationQueued
 
       deleteDocument: (@lastEntityLink, @lastOptions, callback) =>
@@ -117,7 +119,5 @@ class DocumentDBMock
           @rows.push(@lastEntityLink)
           if callback?
             @_shiftNext()
-            callback(@nextError, @nextResources, @nextOptions)
+            callback(@nextError, @nextResources, @nextHeaders)
         return @nextCollectionOperationQueued
-
-module.exports = DocumentDBMock

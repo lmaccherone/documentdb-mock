@@ -1,4 +1,4 @@
-# DocumentDBMock #
+# ServerSideMock #
 
 Copyright (c) 2015, Lawrence S. Maccherone, Jr.
 
@@ -18,7 +18,7 @@ This package implements a thin mock for testing stored procedures.
 
 ### Working ###
 
-DocumentDBMock implements many of the methods in the [DocumentDB's Collection class](http://dl.windowsazure.com/documentDB/jsserverdocs/Collection.html) including:
+ServerSideMock implements many of the methods in the [DocumentDB's Collection class](http://dl.windowsazure.com/documentDB/jsserverdocs/Collection.html) including:
 
 * getResponse.setBody
 * getSelfLink
@@ -32,7 +32,10 @@ DocumentDBMock implements many of the methods in the [DocumentDB's Collection cl
 ### Unimplemented ###
 
 * Attachment operations - should be easy to implement following the patterns for document operations
-* Right now, you pretty much have to pre-configure the mock with every response that you expect to get from DocumentDB operations. 
+* Right now, you pretty much have to pre-configure the mock with every response that you expect to get from DocumentDB 
+  operations. It would be nice if it behaved more like the real thing and saved documents. I'd need to find an in process 
+  database that supported simple SQL and that might not support all the features of DocumentDB's query language. If 
+  anyone knows of something like this, please let me know.
 
 
 ## Install ##
@@ -42,19 +45,19 @@ DocumentDBMock implements many of the methods in the [DocumentDB's Collection cl
 
 ## Usage ##
 
-You can look at the code in the test and stored-procedure folders to see how to use DocumentDBMock. 
+You can look at the code in the test and stored-procedure folders of documentdb-utils to see how to use ServerSideMock. 
 
 Basically:
 
 1. Create a module to hold one or more stored procedures. You simply need to `exports` your function(s).
-2. Create your mock with `mock = new DocumentDBMock('path/to/stored/procedure')`
+2. Create your mock with `mock = new ServerSideMock('path/to/stored/procedure')`
 3. Set `mock.nextResources`, `mock.nextError`, `mock.nextOptions`, and/or `mock.nextCollectionOperationQueued` to control
    the response that your stored procedure will see to the next collection operation. Note, nextCollectionOperationQueued
    is the Boolean that is immediately returned from collection operation calls. Setting this to `false` allows you to test
    situations where your stored procedure is defensively timed out by DocumentDB.
 4. Call your stored procedure like it was a function from within your test with `mock.package.your-stored-procedure()`
 5. Inspect `mock.lastBody` to see the output of your stored procedure. You can also inspect `mock.lastResponseOptions`
-   'mock.lastCollectionLink`, and `mock.lastQueryFilter` to see the last values that your stored procedure sent into
+   `mock.lastCollectionLink`, and `mock.lastQueryFilter` to see the last values that your stored procedure sent into
    the most recent collection operation.
 
 As an example, here is a stored procedure that will count all of the documents in a collection:
@@ -112,8 +115,8 @@ As an example, here is a stored procedure that will count all of the documents i
 
 Here is a simple nodeunit test of the above stored procedure:
 
-    DocumentDBMock = require('documentdb-mock')
-    mock = new DocumentDBMock('./stored-procedures/countDocuments')
+    {ServerSideMock} = require('documentdb-mock')
+    mock = new ServerSideMock('./stored-procedures/countDocuments')
     
     exports.countTest =
     
@@ -194,6 +197,7 @@ Here's an example of testing a stored procedure being forceably timed out by Doc
 
 ## Changelog ##
 
+* 0.3.0 - 2015-11-12 - **Backward breaking** Split into ServerSideMock and ClientSideMock
 * 0.2.0 - 2015-11-02 - **Backward breaking** Moved all example sprocs to documentdb-utils
 * 0.1.4 - 2015-07-09 - Now correctly supports missing options parameter. Also fixed createVariedDocuments to use callback, which exposed the problem with the optional options parameter.
 * 0.1.3 - 2015-07-07 - Lots of little fixes found when using to test documentdb-lumenize
@@ -202,7 +206,7 @@ Here's an example of testing a stored procedure being forceably timed out by Doc
 * 0.1.0 - 2015-06-28 - Initial release
 
 
-## Contributing to DocumentDBMock ##
+## Contributing to documentdb-mock ##
 
 I'd be willing to accept pull requests implementing any unimplemented functionality listed as "Unimplemented" above. Also, I'd love to hear feedback from other people using it.
 

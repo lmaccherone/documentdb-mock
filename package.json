@@ -1,8 +1,8 @@
 {
   "name": "documentdb-mock",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Mock for testing Stored Procedures in Microsoft Azure's DocumentDB",
-  "main": "./DocumentDBMock",
+  "main": "./index",
   "scripts": {
     "test": "nodeunit",
     "prepublish": "cake compile"
