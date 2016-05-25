@@ -1,4 +1,5 @@
 rewire = require("rewire")
+{_} = require('lodash')
 
 type = do ->  # from http://arcturo.github.com/library/coffeescript/07_the_bad_parts.html
   classToType = {}
@@ -80,7 +81,7 @@ module.exports = class ServerSideMock
           @lastOptions = null
         @_shiftNextCollectionOperationQueued()
         if @nextCollectionOperationQueued
-          @rows.push(@lastRow)
+          @rows.push(_.cloneDeep(@lastRow))
           if callback?
             @_shiftNext()
             callback(@nextError, @nextResources, @nextHeaders)
@@ -104,7 +105,7 @@ module.exports = class ServerSideMock
           throw new Error("The input content is invalid because the required property, id, is missing.")
         @_shiftNextCollectionOperationQueued()
         if @nextCollectionOperationQueued
-          @rows.push(@lastRow)
+          @rows.push(_.cloneDeep(@lastRow))
           if callback?
             @_shiftNext()
             callback(@nextError, @nextResources, @nextHeaders)
@@ -116,7 +117,7 @@ module.exports = class ServerSideMock
           @lastOptions = null
         @_shiftNextCollectionOperationQueued()
         if @nextCollectionOperationQueued
-          @rows.push(@lastEntityLink)
+          @rows.push(_.cloneDeep(@lastEntityLink))
           if callback?
             @_shiftNext()
             callback(@nextError, @nextResources, @nextHeaders)

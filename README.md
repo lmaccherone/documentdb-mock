@@ -202,6 +202,7 @@ Here's an example of testing a stored procedure being forceably timed out by Doc
 
 ## Changelog ##
 
+* 0.3.1 - 2016-05-25 - Now clones inputs so no side effects
 * 0.3.0 - 2015-11-12 - **Backward breaking** Split into ServerSideMock and ClientSideMock
 * 0.2.0 - 2015-11-02 - **Backward breaking** Moved all example sprocs to documentdb-utils
 * 0.1.4 - 2015-07-09 - Now correctly supports missing options parameter. Also fixed createVariedDocuments to use callback, which exposed the problem with the optional options parameter.

@@ -36,6 +36,7 @@
     "coffee-script": "^1.9.2"
   },
   "dependencies": {
+    "lodash": "^3.10.1",
     "rewire": "^2.3.3"
   }
 }
