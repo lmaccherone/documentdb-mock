@@ -63,6 +63,7 @@ module.exports = class ServerSideMock
         if @nextCollectionOperationQueued
           @_shiftNext()
           callback(@nextError, @nextResources, @nextHeaders)
+          return true;
         return @nextCollectionOperationQueued
 
       readDocuments: (@lastEntityLink, @lastOptions, callback) =>
@@ -73,6 +74,7 @@ module.exports = class ServerSideMock
         if @nextCollectionOperationQueued
           @_shiftNext()
           callback(@nextError, @nextResources, @nextHeaders)
+          return true;
         return @nextCollectionOperationQueued
 
       createDocument: (@lastEntityLink, @lastRow, @lastOptions, callback) =>
@@ -85,6 +87,7 @@ module.exports = class ServerSideMock
           if callback?
             @_shiftNext()
             callback(@nextError, @nextResources, @nextHeaders)
+            return true;
         return @nextCollectionOperationQueued
 
       readDocument: (@lastEntityLink, @lastOptions, callback) =>
@@ -95,6 +98,7 @@ module.exports = class ServerSideMock
         if @nextCollectionOperationQueued
           @_shiftNext()
           callback(@nextError, @nextResources, @nextHeaders)
+          return true;
         return @nextCollectionOperationQueued
 
       replaceDocument: (@lastEntityLink, @lastRow, @lastOptions, callback) =>
@@ -109,6 +113,7 @@ module.exports = class ServerSideMock
           if callback?
             @_shiftNext()
             callback(@nextError, @nextResources, @nextHeaders)
+            return true;            
         return @nextCollectionOperationQueued
 
       deleteDocument: (@lastEntityLink, @lastOptions, callback) =>
@@ -121,4 +126,5 @@ module.exports = class ServerSideMock
           if callback?
             @_shiftNext()
             callback(@nextError, @nextResources, @nextHeaders)
+            return true;
         return @nextCollectionOperationQueued
